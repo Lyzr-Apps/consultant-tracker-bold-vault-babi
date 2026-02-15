@@ -1296,7 +1296,7 @@ export default function Page() {
             </ScrollArea>
 
             {/* Quick queries */}
-            <div className="px-3 py-2 border-t border-border/40">
+            <div className="px-3 py-2 border-t border-border/40 md:py-2">
               <div className="flex gap-1.5 flex-wrap">
                 {quickQueries.map(q => (
                   <button
@@ -1312,7 +1312,7 @@ export default function Page() {
             </div>
 
             {/* Chat input */}
-            <div className="p-3 border-t border-border/40">
+            <div className="p-3 pb-16 md:pb-3 border-t border-border/40">
               <form
                 onSubmit={e => { e.preventDefault(); sendChatMessage(chatInput) }}
                 className="flex gap-2"
