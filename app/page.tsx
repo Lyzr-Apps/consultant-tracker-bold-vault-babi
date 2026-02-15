@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { FiUsers, FiCalendar, FiAlertCircle, FiClock, FiPlus, FiEdit2, FiTrash2, FiSend, FiMessageSquare, FiChevronLeft, FiChevronRight, FiSearch, FiFilter, FiCheck, FiX, FiHome, FiList, FiChevronDown, FiChevronUp, FiMail, FiPhone, FiActivity, FiBriefcase, FiMinimize2, FiMaximize2, FiZap, FiLoader } from 'react-icons/fi'
+import { FiUsers, FiCalendar, FiAlertCircle, FiClock, FiPlus, FiEdit2, FiTrash2, FiSend, FiMessageSquare, FiChevronLeft, FiChevronRight, FiSearch, FiFilter, FiCheck, FiX, FiHome, FiList, FiChevronDown, FiChevronUp, FiMail, FiPhone, FiActivity, FiBriefcase, FiMinimize2, FiMaximize2, FiZap, FiLoader, FiMenu, FiArrowLeft } from 'react-icons/fi'
 import { format, formatDistanceToNow, isBefore, startOfWeek, endOfWeek, isWithinInterval, parseISO, addDays } from 'date-fns'
 
 // --- Types ---
@@ -170,6 +170,7 @@ export default function Page() {
   // Navigation
   const [currentView, setCurrentView] = useState<'dashboard' | 'clients' | 'deadlines'>('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   // Data
   const [clients, setClients] = useState<Client[]>([])
@@ -194,6 +195,7 @@ export default function Page() {
 
   // Client view
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
+  const [mobileShowClientDetail, setMobileShowClientDetail] = useState(false)
   const [clientSearchQuery, setClientSearchQuery] = useState('')
   const [clientDetailTab, setClientDetailTab] = useState('overview')
 
@@ -549,12 +551,20 @@ export default function Page() {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background flex">
+        {/* ====== MOBILE SIDEBAR BACKDROP ====== */}
+        {mobileSidebarOpen && (
+          <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setMobileSidebarOpen(false)} />
+        )}
+
         {/* ====== SIDEBAR ====== */}
-        <aside className={cn("flex flex-col border-r border-border/40 bg-card transition-all duration-300 shrink-0", sidebarOpen ? 'w-56' : 'w-14')}>
+        <aside className={cn("flex flex-col border-r border-border/40 bg-card transition-all duration-300 shrink-0", "fixed inset-y-0 left-0 z-40 w-56 md:relative", mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0', sidebarOpen ? 'md:w-56' : 'md:w-14')}>
           <div className="flex items-center gap-2 p-4 border-b border-border/40">
-            {sidebarOpen && <span className="font-serif text-lg font-bold text-primary tracking-wide">CT</span>}
-            <Button variant="ghost" size="sm" className="ml-auto h-8 w-8 p-0" onClick={() => setSidebarOpen(prev => !prev)}>
+            {(sidebarOpen || mobileSidebarOpen) && <span className="font-serif text-lg font-bold text-primary tracking-wide">CT</span>}
+            <Button variant="ghost" size="sm" className="ml-auto h-8 w-8 p-0 hidden md:flex" onClick={() => setSidebarOpen(prev => !prev)}>
               {sidebarOpen ? <FiChevronLeft className="h-4 w-4" /> : <FiChevronRight className="h-4 w-4" />}
+            </Button>
+            <Button variant="ghost" size="sm" className="ml-auto h-8 w-8 p-0 md:hidden" onClick={() => setMobileSidebarOpen(false)}>
+              <FiX className="h-4 w-4" />
             </Button>
           </div>
           <nav className="flex-1 p-2 space-y-1">
@@ -565,25 +575,25 @@ export default function Page() {
             ].map(item => (
               <button
                 key={item.id}
-                onClick={() => setCurrentView(item.id)}
+                onClick={() => { setCurrentView(item.id); setMobileSidebarOpen(false) }}
                 className={cn("flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-sm font-sans transition-colors", currentView === item.id ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-secondary')}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
-                {sidebarOpen && <span>{item.label}</span>}
+                {(sidebarOpen || mobileSidebarOpen) && <span>{item.label}</span>}
               </button>
             ))}
           </nav>
           <div className="p-2 border-t border-border/40">
             <button
-              onClick={() => { setChatOpen(true); setChatExpanded(true) }}
+              onClick={() => { setChatOpen(true); setChatExpanded(true); setMobileSidebarOpen(false) }}
               className={cn("flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-sm font-sans transition-colors text-foreground hover:bg-secondary")}
             >
               <FiMessageSquare className="h-4 w-4 shrink-0" />
-              {sidebarOpen && <span>Ask ConsultTrack</span>}
+              {(sidebarOpen || mobileSidebarOpen) && <span>Ask ConsultTrack</span>}
             </button>
           </div>
           {/* Agent status */}
-          {sidebarOpen && (
+          {(sidebarOpen || mobileSidebarOpen) && (
             <div className="p-3 border-t border-border/40">
               <p className="text-[10px] font-sans uppercase tracking-wider text-muted-foreground mb-1">Agent</p>
               <div className="flex items-center gap-2">
@@ -597,23 +607,26 @@ export default function Page() {
         {/* ====== MAIN CONTENT ====== */}
         <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
           {/* --- Header --- */}
-          <header className="flex items-center gap-4 px-6 py-4 border-b border-border/40 bg-card shrink-0">
-            <h1 className="font-serif text-xl font-bold text-foreground tracking-wide">ConsultTrack</h1>
-            <div className="flex-1 max-w-md ml-4">
+          <header className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 border-b border-border/40 bg-card shrink-0">
+            <Button variant="ghost" size="sm" className="md:hidden h-9 w-9 p-0" onClick={() => setMobileSidebarOpen(true)}>
+              <FiMenu className="h-5 w-5" />
+            </Button>
+            <h1 className="font-serif text-lg sm:text-xl font-bold text-foreground tracking-wide">ConsultTrack</h1>
+            <div className="hidden sm:block flex-1 max-w-md ml-4">
               <div className="relative">
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Search clients, deadlines..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 bg-background font-sans text-sm" />
               </div>
             </div>
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-1 sm:gap-2 ml-auto">
               {statusMessage && (
-                <span className="text-xs font-sans text-primary bg-primary/10 px-3 py-1 rounded-full">{statusMessage}</span>
+                <span className="hidden sm:inline text-xs font-sans text-primary bg-primary/10 px-3 py-1 rounded-full">{statusMessage}</span>
               )}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="outline" size="sm" onClick={() => { setAddClientOpen(true); setClientForm({}) }}>
-                    <FiPlus className="h-4 w-4 mr-1" />
-                    <span className="font-sans text-xs">Client</span>
+                    <FiPlus className="h-4 w-4 sm:mr-1" />
+                    <span className="font-sans text-xs hidden sm:inline">Client</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Add new client</TooltipContent>
@@ -621,8 +634,8 @@ export default function Page() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="outline" size="sm" onClick={() => { setAddDeadlineOpen(true); setDeadlineForm({}); setDeadlineForClientId(null) }}>
-                    <FiPlus className="h-4 w-4 mr-1" />
-                    <span className="font-sans text-xs">Deadline</span>
+                    <FiPlus className="h-4 w-4 sm:mr-1" />
+                    <span className="font-sans text-xs hidden sm:inline">Deadline</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Add new deadline</TooltipContent>
@@ -631,7 +644,7 @@ export default function Page() {
           </header>
 
           {/* --- View Content --- */}
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="flex-1 overflow-y-auto p-3 sm:p-6">
             {/* ======================== DASHBOARD ======================== */}
             {currentView === 'dashboard' && (
               <div className="space-y-6">
@@ -709,7 +722,7 @@ export default function Page() {
                               <div
                                 key={client.id}
                                 className="p-3 rounded-lg border border-border/40 bg-background hover:shadow-sm transition-shadow cursor-pointer"
-                                onClick={() => { setSelectedClientId(client.id); setCurrentView('clients') }}
+                                onClick={() => { setSelectedClientId(client.id); setCurrentView('clients'); setMobileShowClientDetail(true) }}
                               >
                                 <div className="flex items-start justify-between">
                                   <div>
@@ -842,9 +855,9 @@ export default function Page() {
 
             {/* ======================== CLIENTS ======================== */}
             {currentView === 'clients' && (
-              <div className="flex gap-6 h-[calc(100vh-100px)]">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6 h-[calc(100vh-100px)]">
                 {/* Client list panel */}
-                <div className="w-72 shrink-0 flex flex-col">
+                <div className={cn("w-full md:w-72 md:shrink-0 flex flex-col", mobileShowClientDetail ? 'hidden md:flex' : 'flex')}>
                   <div className="mb-3">
                     <div className="relative">
                       <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -856,7 +869,7 @@ export default function Page() {
                       {filteredClients.map(client => (
                         <div
                           key={client.id}
-                          onClick={() => { setSelectedClientId(client.id); setClientDetailTab('overview') }}
+                          onClick={() => { setSelectedClientId(client.id); setClientDetailTab('overview'); setMobileShowClientDetail(true) }}
                           className={cn("p-3 rounded-lg border cursor-pointer transition-all", selectedClientId === client.id ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/40 bg-card hover:bg-secondary/50')}
                         >
                           <p className="font-serif font-semibold text-sm">{client.name}</p>
@@ -875,14 +888,19 @@ export default function Page() {
                 </div>
 
                 {/* Client detail panel */}
-                <div className="flex-1 min-w-0">
+                <div className={cn("flex-1 min-w-0", !mobileShowClientDetail ? 'hidden md:block' : 'block')}>
                   {selectedClient ? (
                     <Card className="h-full flex flex-col shadow-sm">
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="font-serif text-xl">{selectedClient.name}</CardTitle>
-                            <CardDescription className="font-sans">{selectedClient.company}</CardDescription>
+                          <div className="flex items-start gap-2">
+                            <Button variant="ghost" size="sm" className="md:hidden h-8 w-8 p-0 mt-0.5 shrink-0" onClick={() => setMobileShowClientDetail(false)}>
+                              <FiArrowLeft className="h-4 w-4" />
+                            </Button>
+                            <div>
+                              <CardTitle className="font-serif text-xl">{selectedClient.name}</CardTitle>
+                              <CardDescription className="font-sans">{selectedClient.company}</CardDescription>
+                            </div>
                           </div>
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={() => { setEditingClient({ ...selectedClient }); setEditClientOpen(true) }}>
@@ -903,7 +921,7 @@ export default function Page() {
                             <TabsTrigger value="notes" className="font-sans text-xs">Notes</TabsTrigger>
                           </TabsList>
                           <TabsContent value="overview" className="mt-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div className="space-y-3">
                                 <div className="flex items-center gap-2 text-sm font-sans">
                                   <FiMail className="h-4 w-4 text-muted-foreground" />
@@ -955,7 +973,8 @@ export default function Page() {
                               </Button>
                             </div>
                             <ScrollArea className="h-[300px]">
-                              <Table>
+                              <div className="overflow-x-auto">
+                              <Table className="min-w-[500px]">
                                 <TableHeader>
                                   <TableRow>
                                     <TableHead className="font-sans text-xs">Title</TableHead>
@@ -997,6 +1016,7 @@ export default function Page() {
                                   )}
                                 </TableBody>
                               </Table>
+                              </div>
                             </ScrollArea>
                           </TabsContent>
                           <TabsContent value="notes" className="mt-4">
@@ -1016,7 +1036,7 @@ export default function Page() {
                       </CardContent>
                     </Card>
                   ) : (
-                    <Card className="h-full flex items-center justify-center shadow-sm">
+                    <Card className="h-full hidden md:flex items-center justify-center shadow-sm">
                       <div className="text-center p-8">
                         <FiUsers className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
                         <p className="font-serif text-lg text-muted-foreground">Select a client</p>
@@ -1040,7 +1060,7 @@ export default function Page() {
                         <span className="text-xs font-sans text-muted-foreground uppercase tracking-wider">Filters</span>
                       </div>
                       <Select value={deadlineFilterClient} onValueChange={setDeadlineFilterClient}>
-                        <SelectTrigger className="w-44 font-sans text-sm h-9">
+                        <SelectTrigger className="w-full sm:w-44 font-sans text-sm h-9">
                           <SelectValue placeholder="All Clients" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1051,7 +1071,7 @@ export default function Page() {
                         </SelectContent>
                       </Select>
                       <Select value={deadlineFilterPriority} onValueChange={setDeadlineFilterPriority}>
-                        <SelectTrigger className="w-36 font-sans text-sm h-9">
+                        <SelectTrigger className="w-full sm:w-36 font-sans text-sm h-9">
                           <SelectValue placeholder="All Priorities" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1062,7 +1082,7 @@ export default function Page() {
                         </SelectContent>
                       </Select>
                       <Select value={deadlineFilterStatus} onValueChange={setDeadlineFilterStatus}>
-                        <SelectTrigger className="w-36 font-sans text-sm h-9">
+                        <SelectTrigger className="w-full sm:w-36 font-sans text-sm h-9">
                           <SelectValue placeholder="All Statuses" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1085,7 +1105,8 @@ export default function Page() {
                 {/* Deadline table */}
                 <Card className="shadow-sm">
                   <CardContent className="p-0">
-                    <Table>
+                    <div className="overflow-x-auto">
+                    <Table className="min-w-[700px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-10 pl-4">
@@ -1178,6 +1199,7 @@ export default function Page() {
                         )}
                       </TableBody>
                     </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -1187,7 +1209,7 @@ export default function Page() {
 
         {/* ====== CHAT PANEL ====== */}
         {chatOpen && (
-          <div className={cn("fixed bottom-4 right-4 z-50 flex flex-col bg-card border border-border rounded-xl shadow-xl overflow-hidden transition-all duration-300", chatExpanded ? 'w-[420px] h-[560px]' : 'w-80 h-96')}>
+          <div className={cn("fixed z-50 flex flex-col bg-card border border-border shadow-xl overflow-hidden transition-all duration-300", "inset-0 rounded-none md:inset-auto md:bottom-28 md:right-4 md:rounded-xl", chatExpanded ? 'md:w-[420px] md:h-[560px]' : 'md:w-80 md:h-96')}>
             {/* Chat header */}
             <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
               <div className="flex items-center gap-2">
@@ -1314,7 +1336,7 @@ export default function Page() {
         {!chatOpen && (
           <button
             onClick={() => setChatOpen(true)}
-            className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center"
+            className="fixed bottom-28 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center"
           >
             <FiMessageSquare className="h-5 w-5" />
           </button>
@@ -1338,7 +1360,7 @@ export default function Page() {
                 <label className="text-xs font-sans text-muted-foreground">Company</label>
                 <Input value={clientForm.company || ''} onChange={e => setClientForm(prev => ({ ...prev, company: e.target.value }))} placeholder="Company name" className="font-sans text-sm mt-1" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-sans text-muted-foreground">Email</label>
                   <Input value={clientForm.email || ''} onChange={e => setClientForm(prev => ({ ...prev, email: e.target.value }))} placeholder="Email" className="font-sans text-sm mt-1" />
@@ -1348,7 +1370,7 @@ export default function Page() {
                   <Input value={clientForm.phone || ''} onChange={e => setClientForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="Phone" className="font-sans text-sm mt-1" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-sans text-muted-foreground">Industry</label>
                   <Input value={clientForm.industry || ''} onChange={e => setClientForm(prev => ({ ...prev, industry: e.target.value }))} placeholder="Industry" className="font-sans text-sm mt-1" />
@@ -1395,7 +1417,7 @@ export default function Page() {
                   <label className="text-xs font-sans text-muted-foreground">Company</label>
                   <Input value={editingClient.company} onChange={e => setEditingClient(prev => prev ? { ...prev, company: e.target.value } : prev)} className="font-sans text-sm mt-1" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-sans text-muted-foreground">Email</label>
                     <Input value={editingClient.email} onChange={e => setEditingClient(prev => prev ? { ...prev, email: e.target.value } : prev)} className="font-sans text-sm mt-1" />
@@ -1405,7 +1427,7 @@ export default function Page() {
                     <Input value={editingClient.phone} onChange={e => setEditingClient(prev => prev ? { ...prev, phone: e.target.value } : prev)} className="font-sans text-sm mt-1" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-sans text-muted-foreground">Industry</label>
                     <Input value={editingClient.industry} onChange={e => setEditingClient(prev => prev ? { ...prev, industry: e.target.value } : prev)} className="font-sans text-sm mt-1" />
@@ -1465,7 +1487,7 @@ export default function Page() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-sans text-muted-foreground">Due Date</label>
                   <Input type="date" value={deadlineForm.dueDate || ''} onChange={e => setDeadlineForm(prev => ({ ...prev, dueDate: e.target.value }))} className="font-sans text-sm mt-1" />
@@ -1535,7 +1557,7 @@ export default function Page() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="text-xs font-sans text-muted-foreground">Due Date</label>
                     <Input type="date" value={editingDeadline.dueDate} onChange={e => setEditingDeadline(prev => prev ? { ...prev, dueDate: e.target.value } : prev)} className="font-sans text-sm mt-1" />
