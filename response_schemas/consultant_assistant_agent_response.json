@@ -1,0 +1,28 @@
+{
+  "agent_name": "Consultant Assistant Agent",
+  "agent_id": "69920c27a36c3292aec62958",
+  "description": "Answers questions about clients, deadlines, and workload. Summarizes upcoming deliverables, flags overdue items, and provides prioritization recommendations based on client/project data.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "summary": "string",
+    "details": "string",
+    "action_items": [
+      "string"
+    ],
+    "alerts": [
+      "string"
+    ]
+  },
+  "example_response": {
+    "summary": "A brief summary of the response",
+    "details": "Detailed response with structured information about clients, deadlines, or workload",
+    "action_items": [
+      "sample string"
+    ],
+    "alerts": [
+      "sample string"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "workflow": {
+    "nodes": [
+      {
+        "id": "input_node",
+        "type": "Input",
+        "label": "User Query",
+        "nodeCategory": "input"
+      },
+      {
+        "id": "consultant_agent",
+        "type": "Agent",
+        "label": "Consultant Assistant Agent",
+        "nodeCategory": "agent",
+        "agent_id": "69920c27a36c3292aec62958",
+        "config": {
+          "name": "Consultant Assistant Agent",
+          "description": "Answers questions about clients, deadlines, and workload. Summarizes upcoming deliverables, flags overdue items, and provides prioritization recommendations based on client/project data.",
+          "provider_id": "anthropic",
+          "model": "claude-sonnet-4-5",
+          "temperature": 0.3,
+          "top_p": 1,
+          "agent_type": "json",
+          "file_output": false
+        }
+      },
+      {
+        "id": "output_node",
+        "type": "Output",
+        "label": "Response",
+        "nodeCategory": "end"
+      }
+    ],
+    "edges": [
+      {
+        "source": "input_node",
+        "target": "consultant_agent"
+      },
+      {
+        "source": "consultant_agent",
+        "target": "output_node"
+      }
+    ]
+  }
+}

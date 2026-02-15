@@ -1,0 +1,9 @@
+{
+  "agents": {
+    "consultant_assistant_agent": {
+      "agent_id": "69920c27a36c3292aec62958",
+      "name": "Consultant Assistant Agent",
+      "type": "single"
+    }
+  }
+}

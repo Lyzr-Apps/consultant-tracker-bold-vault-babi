@@ -1,0 +1,35 @@
+{
+  "agent_name": "Consultant Assistant Agent",
+  "agent_id": "69920c27a36c3292aec62958",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "response_schema": {
+    "type": "object",
+    "properties": {
+      "summary": {
+        "type": "string",
+        "description": "A brief summary of the response"
+      },
+      "details": {
+        "type": "string",
+        "description": "Detailed response with structured information about clients, deadlines, or workload"
+      },
+      "action_items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of recommended action items or next steps"
+      },
+      "alerts": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Any urgent alerts such as overdue items or approaching deadlines"
+      }
+    },
+    "required": ["summary", "details", "action_items", "alerts"]
+  }
+}
